@@ -17,9 +17,6 @@ env:
 jobs:
   build_and_publish:
     runs-on: ubuntu-24.04
-    # permissions:
-    #   contents: read
-    #   packages: write
 
     steps:
       - name: Checkout repository

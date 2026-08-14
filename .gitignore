@@ -1,0 +1,8 @@
+# Directories
+apivenv/
+__pycache__/
+
+
+
+# Files
+requirements.txt

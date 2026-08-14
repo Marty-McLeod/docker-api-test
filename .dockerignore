@@ -1,0 +1,6 @@
+# Ignore some directories
+apivenv/
+__pycache__/
+
+
+# Files to Ignore

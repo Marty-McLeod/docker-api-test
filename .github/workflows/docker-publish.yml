@@ -31,7 +31,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.repository_owner }}
-          password: ${{ github.PAT_GHCR }}
+          password: ${{ secrets.PAT_GHCR }}
       
       - name: Extract Docker metadata (image name data)
         id: meta

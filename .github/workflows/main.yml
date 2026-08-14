@@ -1,0 +1,19 @@
+name: Docker Image build and deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+    name: Build Docker image and push to repositories
+    runs-on: ubuntu-24.04
+
+    steps:
+      name: Checkout code
+      uses: actions/checkout@v3
+
+      

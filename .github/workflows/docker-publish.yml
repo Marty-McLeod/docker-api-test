@@ -17,7 +17,12 @@ env:
 jobs:
   build_and_publish:
     runs-on: ubuntu-24.04
-
+    # Permissions we must set to use the GITHUB_TOKEN authenticator
+    # Otherwise, the push to GHCR fails!
+    permissions:
+      contents: read
+      packages: write
+      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6

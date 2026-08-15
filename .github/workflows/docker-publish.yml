@@ -52,7 +52,7 @@ jobs:
         env:
           GHCR_TOKEN: ${{ secrets.GHCR_PAT }}
           USERNAME: ${{ github.repository_owner }}
-          REPO_NAME: ${{ github.event.repository.name }}
+          REPO_NAME: ${{ github.event.repository.name }} 
         with:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}

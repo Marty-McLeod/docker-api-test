@@ -46,6 +46,18 @@ jobs:
           push: ${{ github.event_name  != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PRIVATE_KEY }}
+          # port: 
+          script: |
+            docker image pull marty-mcleod/docker-api-test:main
+            docker container stop container-api
+            docker container rm container-api
+            docker container run --name container-api -p 8000:8000 marty-mcleod/docker-api-test
 
       

@@ -30,7 +30,10 @@ jobs:
       - name: Use the value
         id: step_two
         run: |
-          printf '%s\n' "$action_state"
+          printf 'action_state value is: %s' "$action_state"
+          printf 'action_state value is: $action_state"
+          echo 'action_state value is: $action_state"
+          
           
       - name: GitHub repo username to lowercase
         run: |

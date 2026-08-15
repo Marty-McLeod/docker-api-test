@@ -32,16 +32,19 @@ jobs:
         run: |
           printf 'action_state value is: %s\n' "$action_state"
           printf "action_state value is: $action_state\n"
-          echo 'action_state value is: $action_state'
+          echo "action_state value is: $action_state"
           echo "action_state value is: ${{ env.action_state }}"
           
           
       - name: GitHub repo username to lowercase
         run: |
           echo "REPO_NAME_LC=yellow" >> $GITHUB_ENV
+
+      - name: Use GitHub username after modification
+        run: |
           echo $REPO_NAME_LC
           echo ${{ env.REPO_NAME_LC }}
-          printf 'Value of REPO_NAME_LC is: %s' "$REPO_NAME_LC"
+          printf 'Value of REPO_NAME_LC is: %s\n' "$REPO_NAME_LC"
           printf "Value of REPO_NAME_LC is: ${{ env.REPO_NAME_LC }}"
           
           echo "Repo name ${{ github.repository_owner }} stored as $REPO_NAME_LC in REPO_NAME_LC"

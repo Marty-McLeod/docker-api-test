@@ -24,7 +24,7 @@ jobs:
     steps:
       - name: GitHub repo username to lowercase
         run: |
-          echo "REPO_NAME_LC=yellow" >> $GITHUB_ENV
+          echo "REPO_NAME_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Use GitHub username after modification
         run: |
@@ -36,7 +36,6 @@ jobs:
           
           echo "Repo name ${{ github.repository_owner }} stored as $REPO_NAME_LC in REPO_NAME_LC"
           echo "Repo name ${{ github.repository_owner }} stored as ${{ env.REPO_NAME_LC }} in REPO_NAME_LC"
-      # echo "REPO_NAME_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
       # - name: Checkout repository
       #   uses: actions/checkout@v6
 

@@ -60,10 +60,10 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           envs: GHCR_TOKEN,USERNAME,REPO_NAME
           script: |
-            echo $GHCR_TOKEN | docker login ghcr.io -u $USERNAME --password-stdin
-            docker image pull ghcr.io/$USERNAME/$REPO_NAME:main
+            echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+            docker image pull ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:main
             docker container stop container-api
             docker container rm container-api
-            docker container run --name container-api -p 8000:8000 ${{github.repository_owner}}/$REPO_NAME
+            docker container run --name container-api -p 8000:8000 ${{github.repository_owner}}/${{ github.event.repository.name }}
 
       

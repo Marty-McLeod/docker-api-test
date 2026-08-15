@@ -49,15 +49,20 @@ jobs:
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v0.1.8
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_PAT }}
+          USERNAME: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
         with:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            docker image pull marty-mcleod/docker-api-test:main
+            echo $GHCR_TOKEN | docker login ghcr.io -u $USERNAME --password-stdin
+            docker image pull ${{github.repository_owner}}/$REPO_NAME:main
             docker container stop container-api
             docker container rm container-api
-            docker container run --name container-api -p 8000:8000 marty-mcleod/docker-api-test
+            docker container run --name container-api -p 8000:8000 ${{github.repository_owner}}/$REPO_NAME
 
       

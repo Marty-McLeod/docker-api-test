@@ -24,7 +24,7 @@ jobs:
     steps:
       - name: GitHub repo username to lowercase
         run: |
-          echo "REPO_NAME_LC=$(${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+          echo "REPO_NAME_LC=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
           echo "Repo name ${{ github.repository_owner }} stored as '$REPO_NAME_LC' in REPO_NAME_LC"
           
       - name: Checkout repository

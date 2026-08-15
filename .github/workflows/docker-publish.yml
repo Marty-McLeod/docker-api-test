@@ -30,9 +30,10 @@ jobs:
       - name: Use the value
         id: step_two
         run: |
-          printf 'action_state value is: %s' "$action_state"
-          printf 'action_state value is: $action_state'
+          printf 'action_state value is: %s\n' "$action_state"
+          printf "action_state value is: $action_state\n"
           echo 'action_state value is: $action_state'
+          echo "action_state value is: ${{ env.action_state }}"
           
           
       - name: GitHub repo username to lowercase
@@ -40,6 +41,7 @@ jobs:
           echo "REPO_NAME_LC=yellow" >> $env:GITHUB_ENV
           echo $REPO_NAME_LC
           echo ${{ env.REPO_NAME_LC }}
+          printf 'Value of REPO_NAME_LC is: %s' "$REPO_NAME_LC"
           echo "Repo name ${{ github.repository_owner }} stored as $REPO_NAME_LC in REPO_NAME_LC"
           echo "Repo name ${{ github.repository_owner }} stored as ${{ env.REPO_NAME_LC }} in REPO_NAME_LC"
       # echo "REPO_NAME_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV

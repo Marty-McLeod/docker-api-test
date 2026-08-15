@@ -42,7 +42,7 @@ jobs:
           echo $REPO_NAME_LC
           echo ${{ env.REPO_NAME_LC }}
           printf 'Value of REPO_NAME_LC is: %s' "$REPO_NAME_LC"
-          printf 'Value of REPO_NAME_LC is: ${{ env.REPO_NAME_LC }}"
+          printf "Value of REPO_NAME_LC is: ${{ env.REPO_NAME_LC }}"
           
           echo "Repo name ${{ github.repository_owner }} stored as $REPO_NAME_LC in REPO_NAME_LC"
           echo "Repo name ${{ github.repository_owner }} stored as ${{ env.REPO_NAME_LC }} in REPO_NAME_LC"

@@ -48,11 +48,11 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Deploy to server
+        uses: appleboy/ssh-action@v1
         env:
           GHCR_TOKEN: ${{ secrets.GHCR_PAT }}
           USERNAME:   ${{ github.repository_owner }}
-          REPO_NAME:   ${{ github.event.repository.name }} 
-        uses: appleboy/ssh-action@v0.1.8
+          REPO_NAME:  ${{ github.event.repository.name }} 
         with:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}

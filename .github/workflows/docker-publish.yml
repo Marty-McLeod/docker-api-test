@@ -71,7 +71,7 @@ jobs:
             docker image pull ${{ env.IMAGE_REPO_NAME_LC }}:${{ env.TAG_NAME }}
             docker container stop api
             docker container rm api
-            docker container run --name api -p 8000:8000 ${{ env.IMAGE_REPO_NAME_LC }}
+            docker container run -d --name api -p 8000:8000 ${{ env.IMAGE_REPO_NAME_LC }}
 
       - name: Test end step
         run: echo "**Container for api is running.**"

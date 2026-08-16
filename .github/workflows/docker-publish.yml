@@ -47,7 +47,7 @@ jobs:
       # Assigns 'latest' as default
         run: |
           echo "TAG_NAME=latest" >> $GITHUB_ENV
-          echo "REPO_USERNAME_CL: ${{ env.REPO_NAME_LC }}"
+          echo "REPO_USERNAME_CL: ${{ env.REPO_USERNAME_LC }}"
           echo "IMAGE_REPO_NAME_LC: ${{ env.IMAGE_REPO_NAME_LC }}"
           
       - name: Build and push Docker image
@@ -61,21 +61,17 @@ jobs:
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1
-        env:
-          GHCR_TOKEN: ${{ secrets.GHCR_PAT }}
-          # USERNAME:   $REPO_USERNAME_LC
-          REPO_NAME:  ${{ github.event.repository.name }} 
         with:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          envs: GHCR_TOKEN, REPO_NAME, REPO_USERNAME_LC, TAG_NAME
           script: |
-            echo $GHCR_TOKEN | docker login ghcr.io -u $REPO_USERNAME_LC --password-stdin
-            docker image pull ghcr.io/$REPO_USERNAME_LC/$REPO_NAME:$TAG_NAME
+            echo ${{ secrets.GHCR_TOKEN }} | docker login ${{ env.REGISTRY}} -u ${{ env.REPO_USERNAME_LC }} --password-stdin
+            docker image pull ${{ env.IMAGE_REPO_NAME_LC }}:${{ env.TAG_NAME }}
             docker container stop api
             docker container rm api
-            docker container run --name api -p 8000:8000 ghcr.io/$REPO_USERNAME_LC/$REPO_NAME
+            docker container run --name api -p 8000:8000 ${{ env.IMAGE_REPO_NAME_LC }}
+            echo "** Container for api is running.**"
 
       

@@ -65,9 +65,9 @@ jobs:
           envs: GHCR_TOKEN, REPO_NAME, REPO_USERNAME_LC
           script: |
             echo $GHCR_TOKEN | docker login ghcr.io -u $REPO_USERNAME_LC --password-stdin
-            docker image pull ghcr.io/$REPO_USERNAME_LC/$REPO_NAME:main
+            docker image pull ghcr.io/$REPO_USERNAME_LC/$REPO_NAME
             docker container stop api
             docker container rm api
-            docker container run --name container-api -p 8000:8000 $REPO_USERNAME_LC/$REPO_NAME
+            docker container run --name api -p 8000:8000 ghcr.io/$REPO_USERNAME_LC/$REPO_NAME
 
       

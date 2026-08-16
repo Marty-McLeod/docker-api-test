@@ -62,7 +62,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          envs: GHCR_TOKEN,REPO_NAME,REPO_USERNAME_LC
+          envs: GHCR_TOKEN,REPO_NAME
           script: |
             echo $GHCR_TOKEN | docker login ghcr.io -u $REPO_USERNAME_LC --password-stdin
             # docker image pull ghcr.io/$REPO_USERNAME_LC/$REPO_NAME:main

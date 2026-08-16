@@ -72,6 +72,7 @@ jobs:
             docker container stop api
             docker container rm api
             docker container run --name api -p 8000:8000 ${{ env.IMAGE_REPO_NAME_LC }}
-            echo "** Container for api is running.**"
 
-      
+      - name: Test end step
+        run: echo "**Container for api is running.**"
+

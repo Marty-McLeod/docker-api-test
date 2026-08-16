@@ -64,16 +64,10 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           envs: GHCR_TOKEN, REPO_NAME, REPO_USERNAME_LC
           script: |
-            echo "Path: $(pwd)"
-            echo "-- IMAGES ON SERVER --"
-            echo $(docker images)
-            echo "-- CONTAINERS FOUND --"
-            echo $(docker ps -a)
-            echo "    "
-            # echo $GHCR_TOKEN | docker login ghcr.io -u $REPO_USERNAME_LC --password-stdin
-            # docker image pull ghcr.io/$REPO_USERNAME_LC/$REPO_NAME:main
-            # docker container stop api
-            # docker container rm api
-            # docker container run --name container-api -p 8000:8000 $REPO_USERNAME_LC/$REPO_NAME
+            echo $GHCR_TOKEN | docker login ghcr.io -u $REPO_USERNAME_LC --password-stdin
+            docker image pull ghcr.io/$REPO_USERNAME_LC/$REPO_NAME:main
+            docker container stop api
+            docker container rm api
+            docker container run --name container-api -p 8000:8000 $REPO_USERNAME_LC/$REPO_NAME
 
       

@@ -48,7 +48,7 @@ jobs:
           file: Dockerfile
           context: .
           push: ${{ github.event_name  != 'pull_request' }}
-          tags: $REGISTRY/$REPO_USERNAME_LC/${{github.event.repository.name}}:$TAG_NAME
+          tags: ${{ env.REGISTRY }}/${{ env.REPO_USERNAME_LC }}/${{github.event.repository.name}}:${{ env.TAG_NAME }}
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1
@@ -61,10 +61,10 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          envs: GHCR_TOKEN, REPO_NAME, REPO_USERNAME_LC
+          envs: GHCR_TOKEN, REPO_NAME, REPO_USERNAME_LC, TAG_NAME
           script: |
             echo $GHCR_TOKEN | docker login ghcr.io -u $REPO_USERNAME_LC --password-stdin
-            docker image pull ghcr.io/$REPO_USERNAME_LC/$REPO_NAME
+            docker image pull ghcr.io/$REPO_USERNAME_LC/$REPO_NAME:$TAG_NAME
             docker container stop api
             docker container rm api
             docker container run --name api -p 8000:8000 ghcr.io/$REPO_USERNAME_LC/$REPO_NAME

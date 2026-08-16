@@ -5,7 +5,7 @@ name: Docker Image build and deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main,master]
     tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ main ]
@@ -21,35 +21,34 @@ jobs:
       contents: read
       packages: write
       
-    steps:
-      - name: GitHub repo username to lowercase
-        run: |
-          echo "REPO_USERNAME_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-          
+    steps:      
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      # - name: Log into package/image registry (${{ env.REGISTRY }})
-      #   if: github.event_name != 'pull_request'
-      #   uses: docker/login-action@v4
-      #   with:
-      #     registry: ${{ env.REGISTRY }}
-      #     username: ${{ github.repository_owner }}
-      #     password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log into package/image registry (${{ env.REGISTRY }})
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       
-      # - name: Extract Docker metadata (image name data)
-      #   id: meta
-      #   uses: docker/metadata-action@v6
-      #   with:
-      #     images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Docker image-specific env variable assignments
+        run: |
+          echo "REPO_USERNAME_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV      
 
-      # - name: Build and push Docker image
-      #   uses: docker/build-push-action@v6
-      #   with:
-      #     context: .
-      #     push: ${{ github.event_name  != 'pull_request' }}
-      #     tags: ${{ steps.meta.outputs.tags }}
-      #     labels: ${{ steps.meta.outputs.labels }}
+      - name: Assign version (tag)
+      # Assigns 'latest' as default
+        run: |
+          echo "TAG_NAME=latest" >> $GITHUB_ENV
+          
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          file: Dockerfile
+          context: .
+          push: ${{ github.event_name  != 'pull_request' }}
+          tags: $REGISTRY/$REPO_USERNAME_LC/${{github.event.repository.name}}:$TAG_NAME
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1

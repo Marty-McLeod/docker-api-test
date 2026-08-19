@@ -51,7 +51,7 @@ jobs:
   # The job continues only if the 'should_deploy' value is true
   build_and_publish:
     runs-on: ubuntu-24.04
-    if: needs.prepare.outputs.should_deploy == true
+    if: needs.prepare.outputs.should_deploy == 'true'
     needs: prepare
     permissions:
       contents: read

@@ -1,14 +1,15 @@
 name: Docker image build and deploy
-# After a push to this repository, a Docker image is built and
-# pushed to a VPS server and run
-
-
+# Build & deployment workflow to build a Docker image, log into the VPS server, and
+# run a Docker container
 on:
   # push:
-  #   branches: [ main,master]
-  #   tags: [ 'v*.*.*' ]
-  # pull_request:
-  #   branches: [ main ]
+  #   branches:
+  #     - main
+  #     - master
+  pull_request:
+    branches: main
+    types: [closed, labeled]
+    
   workflow_dispatch:
     inputs:
       logLevel:
@@ -23,11 +24,34 @@ on:
   
 env:
   REGISTRY: ghcr.io
-  # IMAGE_NAME: ${{ github.repository }}
-  
+  SHOULD_DEPLOY: ${{  ( github.event_name == 'pull_request' && github.event.pull_request.merged == true && 
+                       contains(github.event.pull_request.labels.*.name, 'deploy') 
+                       ) ||
+                      ( 
+                        github.event_name == 'pull_request' && github.event.pull_request.merged == true && 
+                        github.event.action == 'labeled' && 
+                        contains(github.event.pull_request.labels.*.name, 'deploy') 
+                       ) ||
+                      (
+                        github.event_name == 'workflow_dispatch'
+                      )
+                  }}                  
+                  
 jobs:
+  # env variables are not accessable at job level, so create an output variable to work around this
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs: 
+      should_deploy: ${{ env.SHOULD_DEPLOY }}
+    steps:
+      - name: 
+        run: |
+          echo "SHOULD_DEPLOY: ${{ env.SHOULD_DEPLOY }}"
+          
+  # The job continues only if the 'should_deploy' value is true
   build_and_publish:
     runs-on: ubuntu-24.04
+    if: needs.prepare.outputs.should_deploy == true
     permissions:
       contents: read
       packages: write
@@ -45,7 +69,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # Docker-specific env variables
-      # NOTE! env variables defined in a step cannot be referenced until another step, hence the need for separate ones
+      # NOTE! env variables defined in a step cannot be referenced until another step, hence the 
+      # need for separate steps
       - name: Convert GitHub username to lowercase
         run: |
           echo "REPO_USERNAME_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
@@ -69,6 +94,7 @@ jobs:
       #     push: ${{ github.event_name  != 'pull_request' }}
       #     tags: ${{ env.IMAGE_REPO_NAME_LC }}:${{ env.TAG_NAME }}
 
+  # Run the deployment actions if the build/package job completed successfully
   deploy:
     runs-on: ubuntu-24.04
     needs: build_and_publish

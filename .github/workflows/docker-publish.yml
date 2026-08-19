@@ -1,15 +1,26 @@
-name: Docker Image build and deploy
+name: Docker image build and deploy
 # After a push to this repository, a Docker image is built and
 # pushed to a VPS server and run
 
 
 on:
-  push:
-    branches: [ main,master]
-    tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ main ]
-
+  # push:
+  #   branches: [ main,master]
+  #   tags: [ 'v*.*.*' ]
+  # pull_request:
+  #   branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+        type: choice
+        options:
+        - info
+        - warning
+        - debug    
+  
 env:
   REGISTRY: ghcr.io
   # IMAGE_NAME: ${{ github.repository }}
@@ -50,25 +61,31 @@ jobs:
           echo "REPO_USERNAME_CL: ${{ env.REPO_USERNAME_LC }}"
           echo "IMAGE_REPO_NAME_LC: ${{ env.IMAGE_REPO_NAME_LC }}"
           
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          file: Dockerfile
-          context: .
-          push: ${{ github.event_name  != 'pull_request' }}
-          tags: ${{ env.IMAGE_REPO_NAME_LC }}:${{ env.TAG_NAME }}
+      # - name: Build and push Docker image
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     file: Dockerfile
+      #     context: .
+      #     push: ${{ github.event_name  != 'pull_request' }}
+      #     tags: ${{ env.IMAGE_REPO_NAME_LC }}:${{ env.TAG_NAME }}
 
+  deploy:
+    runs-on: ubuntu-24.04
+    needs: build_and_publish
+    steps:
       - name: Deploy to server
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          script: |
-            echo ${{ secrets.GHCR_TOKEN }} | docker login ${{ env.REGISTRY}} -u ${{ env.REPO_USERNAME_LC }} --password-stdin
-            docker image pull ${{ env.IMAGE_REPO_NAME_LC }}:${{ env.TAG_NAME }}
-            docker container stop api
-            docker container rm api
-            docker container run -d --name api -p 8000:8000 ${{ env.IMAGE_REPO_NAME_LC }}
+        run: echo "**Job 'deploy' has run**"
+        
+        # uses: appleboy/ssh-action@v1
+        # with:
+        #   host: ${{ secrets.SSH_HOST }}
+        #   port: ${{ secrets.SSH_PORT }}
+        #   username: ${{ secrets.SSH_USER }}
+        #   password: ${{ secrets.SSH_PASSWORD }}
+        #   script: |
+        #     echo ${{ secrets.GHCR_TOKEN }} | docker login ${{ env.REGISTRY}} -u ${{ env.REPO_USERNAME_LC }} --password-stdin
+        #     docker image pull ${{ env.IMAGE_REPO_NAME_LC }}:${{ env.TAG_NAME }}
+        #     docker container stop api
+        #     docker container rm api
+        #     docker container run -d --name api -p 8000:8000 ${{ env.IMAGE_REPO_NAME_LC }}
 

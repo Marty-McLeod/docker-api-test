@@ -48,6 +48,14 @@ jobs:
       - name: 
         run: |
           echo "SHOULD_DEPLOY: ${{ env.SHOULD_DEPLOY }}"
+      - name: Validate PR status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const shdep = context.env.SHOULD_DEPLOY;
+            if (shdep == 'false') {  # Check if should_deploy flag is true/false
+              core.setFailed("Deployment conditions not met. Exiting early, workflow not needed.");
+            } 
           
   # The job continues only if the 'should_deploy' value is true
   build_and_publish:

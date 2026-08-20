@@ -76,19 +76,24 @@ jobs:
       # NOTE! env variables defined in a step cannot be referenced until another step, hence the 
       # need for separate steps
       - name: Convert GitHub username to lowercase
+        id: user
         run: |
-          echo "REPO_USERNAME_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+          echo "REPO_USERNAME_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Build Docker image name (image 'tag')
+        id: image
         run: |
-          echo "IMAGE_REPO_NAME_LC=$(echo '${{ env.REGISTRY }}/${{ env.REPO_USERNAME_LC }}/${{ github.event.repository.name }}')" >> $GITHUB_ENV
+          echo "IMAGE_REPO_NAME_LC=$(echo '${{ env.REGISTRY }}/
+            ${{ steps.user.outputs.REPO_USERNAME_LC }}/${{ github.event.repository.name }}')" >> $GITHUB_OUTPUT
           
       - name: Assign version (tag)
       # Assigns 'latest' as default
+        id: tag
         run: |
-          echo "TAG_NAME=latest" >> $GITHUB_ENV
-          echo "REPO_USERNAME_CL: ${{ env.REPO_USERNAME_LC }}"
-          echo "IMAGE_REPO_NAME_LC: ${{ env.IMAGE_REPO_NAME_LC }}"
+          echo "TAG_NAME=latest" >> $GITHUB_OUTPUT
+          
+          echo "REPO_USERNAME_LC: ${{ steps.user.outputs.REPO_USERNAME_LC }}"
+          echo "IMAGE_REPO_NAME_LC: ${{ steps.user.outputs.IMAGE_REPO_NAME_LC }}"
           
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -96,7 +101,7 @@ jobs:
           file: Dockerfile
           context: .
           push: ${{ github.event_name  != 'pull_request' }}
-          tags: ${{ env.IMAGE_REPO_NAME_LC }}:${{ env.TAG_NAME }}
+          tags: ${{ steps.image.outputs.IMAGE_REPO_NAME_LC }}:${{ steps.tag.outputs.TAG_NAME }}
 
   # Run the deployment actions if the build/package job completed successfully
   deploy:
@@ -111,9 +116,13 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            echo ${{ secrets.GHCR_TOKEN }} | docker login ${{ env.REGISTRY}} -u ${{ env.REPO_USERNAME_LC }} --password-stdin
-            docker image pull ${{ env.IMAGE_REPO_NAME_LC }}:${{ env.TAG_NAME }}
+            echo ${{ secrets.GHCR_TOKEN }} | docker login ${{ env.REGISTRY}} -u 
+              ${{ needs.build_and_publish.outputs.REPO_USERNAME_LC }} --password-stdin
+              
+            docker image pull ${{ needs.build_and_publish.outputs.IMAGE_REPO_NAME_LC }}:
+              ${{ needs.build_and_publish.outputs.TAG_NAME }}
+              
             docker container stop api
             docker container rm api
-            docker container run -d --name api -p 8000:8000 ${{ env.IMAGE_REPO_NAME_LC }}
+            docker container run -d --name api -p 8000:8000 ${{ needs.build_and_publish.outputs.IMAGE_REPO_NAME_LC }}
 

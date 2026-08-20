@@ -81,7 +81,7 @@ jobs:
         id: image
         run: >
           echo "IMAGE_REPO_NAME_LC=$(echo '${{ env.REGISTRY }}/
-          ${{ env.REPO_USERNAME_LC }}/${{ github.event.repository.name }}')" >> $GITHUB_ENV
+        ${{ env.REPO_USERNAME_LC }}/${{ github.event.repository.name }}')" >> $GITHUB_ENV
           
       - name: Assign version (tag)
       # Assigns 'latest' as default

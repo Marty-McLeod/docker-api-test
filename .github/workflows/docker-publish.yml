@@ -80,7 +80,7 @@ jobs:
       - name: Build Docker image name (image 'tag')
         id: image
         run: >
-          echo "IMAGE_REPO_NAME_LC=$(echo '${{ env.REGISTRY }}/
+          echo "IMAGE_REPO_NAME_LC=$(echo '${{ env.REGISTRY }}/ \
             ${{ env.REPO_USERNAME_LC }}/${{ github.event.repository.name }}')" >> $GITHUB_ENV
           
       - name: Assign version (tag)

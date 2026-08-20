@@ -8,8 +8,10 @@ on:
   #     - master
   pull_request:
     branches: main
-    types: [closed, labeled]
-    
+    types: [closed]
+      labels:
+        - 'deploy'
+      
   workflow_dispatch:
     inputs:
       logLevel:
@@ -24,13 +26,20 @@ on:
   
 env:
   REGISTRY: ghcr.io
+  # SHOULD_DEPLOY: ${{  ( github.event_name == 'pull_request' && github.event.pull_request.merged == true && 
+  #                      contains(github.event.pull_request.labels.*.name, 'deploy') 
+  #                      ) ||
+  #                     ( 
+  #                       github.event_name == 'pull_request' && github.event.pull_request.merged == true && 
+  #                       github.event.action == 'labeled' && 
+  #                       contains(github.event.pull_request.labels.*.name, 'deploy') 
+  #                      ) ||
+  #                     (
+  #                       github.event_name == 'workflow_dispatch'
+  #                     )
+  #                 }}                  
   SHOULD_DEPLOY: ${{  ( github.event_name == 'pull_request' && github.event.pull_request.merged == true && 
                        contains(github.event.pull_request.labels.*.name, 'deploy') 
-                       ) ||
-                      ( 
-                        github.event_name == 'pull_request' && github.event.pull_request.merged == true && 
-                        github.event.action == 'labeled' && 
-                        contains(github.event.pull_request.labels.*.name, 'deploy') 
                        ) ||
                       (
                         github.event_name == 'workflow_dispatch'

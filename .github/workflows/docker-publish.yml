@@ -42,30 +42,24 @@ jobs:
   # env variables are not accessable at job level, so create an output variable to work around this
   prepare:
     runs-on: ubuntu-24.04
-    outputs: 
-      should_deploy: ${{ env.SHOULD_DEPLOY }}
     steps:
-      - name: 
-        run: |
-          echo "SHOULD_DEPLOY: ${{ env.SHOULD_DEPLOY }}"
-      - name: Validate PR status
+      - name: Validate should_deploy status
         uses: actions/github-script@v7
         with:
           script: |
+            // NOTE: adding a '#' type comment inside the clause causes a syntax error failure.
             const shdep = process.env.SHOULD_DEPLOY;
-            if (shdep == 'false') { # Check if should_deploy flag is true/false
-              core.setFailed("Deployment conditions not met. Exiting early, workflow not needed.");
+            if (shdep == 'false') {
+              core.setFailed("INFO: Deployment conditions not met. Exiting workflow early.");
             } 
           
   # The job continues only if the 'should_deploy' value is true
   build_and_publish:
     runs-on: ubuntu-24.04
-    if: needs.prepare.outputs.should_deploy == 'true'
     needs: prepare
     permissions:
       contents: read
       packages: write
-      
     steps:      
       - name: Checkout repository
         uses: actions/checkout@v6

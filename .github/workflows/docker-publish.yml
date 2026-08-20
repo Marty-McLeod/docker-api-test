@@ -2,14 +2,15 @@ name: Docker image build and deploy
 # Build & deployment workflow to build a Docker image, log into the VPS server, and
 # run a Docker container
 on:
-  # push:
-  #   branches:
-  #     - main
-  #     - master
+  push:
+    branches:
+      - main
+      - master
+      
   pull_request:
     branches: main
     types: [closed, labeled]
-    
+      
   workflow_dispatch:
     inputs:
       logLevel:
@@ -35,7 +36,7 @@ env:
                       (
                         github.event_name == 'workflow_dispatch'
                       )
-                  }}                  
+                  }}                                
                   
 jobs:
   # env variables are not accessable at job level, so create an output variable to work around this

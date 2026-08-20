@@ -2,11 +2,14 @@ name: Docker image build and deploy
 # Build & deployment workflow to build a Docker image, log into the VPS server, and
 # run a Docker container
 on:
+  push:
+    branches:
+      - main
+      - master
+      
   pull_request:
     branches: main
-    types: [closed]
-      labels:
-        - 'deploy'
+    types: [closed, labeled]
       
   workflow_dispatch:
     inputs:
@@ -22,25 +25,18 @@ on:
   
 env:
   REGISTRY: ghcr.io
-  # SHOULD_DEPLOY: ${{  ( github.event_name == 'pull_request' && github.event.pull_request.merged == true && 
-  #                      contains(github.event.pull_request.labels.*.name, 'deploy') 
-  #                      ) ||
-  #                     ( 
-  #                       github.event_name == 'pull_request' && github.event.pull_request.merged == true && 
-  #                       github.event.action == 'labeled' && 
-  #                       contains(github.event.pull_request.labels.*.name, 'deploy') 
-  #                      ) ||
-  #                     (
-  #                       github.event_name == 'workflow_dispatch'
-  #                     )
-  #                 }}                  
   SHOULD_DEPLOY: ${{  ( github.event_name == 'pull_request' && github.event.pull_request.merged == true && 
                        contains(github.event.pull_request.labels.*.name, 'deploy') 
+                       ) ||
+                      ( 
+                        github.event_name == 'pull_request' && github.event.pull_request.merged == true && 
+                        github.event.action == 'labeled' && 
+                        contains(github.event.pull_request.labels.*.name, 'deploy') 
                        ) ||
                       (
                         github.event_name == 'workflow_dispatch'
                       )
-                  }}                  
+                  }}                                
                   
 jobs:
   # env variables are not accessable at job level, so create an output variable to work around this

@@ -40,28 +40,27 @@ env:
                   
 jobs:
   # env variables are not accessable at job level, so create an output variable to work around this
-  # Uses actions/github-script for JS failure but also with reporting message in GUI status box
   prepare:
     runs-on: ubuntu-24.04
     outputs: 
-      should_deploy: ${{ env.SHOULD_DEPLOY }}    
+      should_deploy: ${{ env.SHOULD_DEPLOY }}
     steps:
       - name: 
         run: |
-          echo "SHOULD_DEPLOY: ${{ env.SHOULD_DEPLOY }}"	
-      - name: Validate should_deploy status
+          echo "SHOULD_DEPLOY: ${{ env.SHOULD_DEPLOY }}"
+      - name: Validate PR status
         uses: actions/github-script@v7
         with:
           script: |
             const shdep = process.env.SHOULD_DEPLOY;
-            if (shdep == 'false') {  # Check if should_deploy flag is true/false
-              core.setFailed("**Deployment conditions not met. Exiting early, workflow not needed.**");
-            }      
+            if (shdep == 'false') {
+              core.setFailed("Deployment conditions not met. Exiting early, workflow not needed.");
+            } 
           
   # The job continues only if the 'should_deploy' value is true
   build_and_publish:
     runs-on: ubuntu-24.04
-    if: ${{ needs.prepare.outputs.should_deploy == 'true' }}
+    if: needs.prepare.outputs.should_deploy == 'true'
     needs: prepare
     permissions:
       contents: read

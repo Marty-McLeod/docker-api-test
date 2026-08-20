@@ -43,7 +43,12 @@ jobs:
   # Uses actions/github-script for JS failure but also with reporting message in GUI status box
   prepare:
     runs-on: ubuntu-24.04
+    outputs: 
+      should_deploy: ${{ env.SHOULD_DEPLOY }}    
     steps:
+      - name: 
+        run: |
+          echo "SHOULD_DEPLOY: ${{ env.SHOULD_DEPLOY }}"	
       - name: Validate should_deploy status
         uses: actions/github-script@v7
         with:
@@ -56,6 +61,7 @@ jobs:
   # The job continues only if the 'should_deploy' value is true
   build_and_publish:
     runs-on: ubuntu-24.04
+    if: ${{ needs.prepare.outputs.should_deploy == 'true' }}
     needs: prepare
     permissions:
       contents: read

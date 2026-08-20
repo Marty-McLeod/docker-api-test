@@ -3,9 +3,7 @@ name: Docker image build and deploy
 # run a Docker container
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: main
       
   pull_request:
     branches: main
@@ -19,9 +17,9 @@ on:
         default: 'warning'
         type: choice
         options:
-        - info
-        - warning
-        - debug    
+          - info
+          - warning
+          - debug    
   
 env:
   REGISTRY: ghcr.io
@@ -39,8 +37,8 @@ env:
                   }}                                
                   
 jobs:
-  # env variables are not accessable at job level, so create an output variable to work around this
-  prepare:
+  # Preliminary job to exit the workflow process if a deploy situation is not present
+  validate_deploy:
     runs-on: ubuntu-24.04
     steps:
       - name: Validate should_deploy status
@@ -48,24 +46,24 @@ jobs:
         with:
           script: |
             // NOTE: adding a '#' type comment inside the clause causes a syntax error failure.
-            const shdep = process.env.SHOULD_DEPLOY;
-            if (shdep == 'false') {
+            // If deploy is not valid, fail the workflow and return a message
+            const deploy_flag = process.env.SHOULD_DEPLOY;
+            if (deploy_flag == 'false') {
               core.setFailed("INFO: Deployment conditions not met. Exiting workflow early.");
             } 
           
   # The job continues only if the 'should_deploy' value is true
   build_and_publish:
     runs-on: ubuntu-24.04
-    needs: prepare
+    needs: validate_deploy
     permissions:
       contents: read
       packages: write
     steps:      
-      - name: Checkout repository
+      - name: Checkout repository (${{ github.ref_name }})
         uses: actions/checkout@v6
 
       - name: Log into package/image registry (${{ env.REGISTRY }})
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
@@ -74,40 +72,32 @@ jobs:
 
       # Docker-specific env variables
       # NOTE! env variables defined in a step cannot be referenced until another step, hence the 
-      # need for separate steps
+      # need for separate steps after each is created
       - name: Convert GitHub username to lowercase
-        id: user
         run: |
-          echo "REPO_USERNAME_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+          echo "REPO_USERNAME_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Build Docker image name (image 'tag')
         id: image
-        run: |
+        run: >
           echo "IMAGE_REPO_NAME_LC=$(echo '${{ env.REGISTRY }}/
-            ${{ steps.user.outputs.REPO_USERNAME_LC }}/${{ github.event.repository.name }}')" >> $GITHUB_OUTPUT
+            ${{ env.REPO_USERNAME_LC }}/${{ github.event.repository.name }}')" >> $GITHUB_ENV
           
       - name: Assign version (tag)
       # Assigns 'latest' as default
-        id: tag
         run: |
-          echo "TAG_NAME=latest" >> $GITHUB_OUTPUT
-          
-          echo "REPO_USERNAME_LC: ${{ steps.user.outputs.REPO_USERNAME_LC }}"
-          echo "IMAGE_REPO_NAME_LC: ${{ steps.user.outputs.IMAGE_REPO_NAME_LC }}"
+          echo "TAG_NAME=latest" >> $GITHUB_ENV
+          echo "REPO_USERNAME_LC: ${{ env.REPO_USERNAME_LC }}"
+          echo "IMAGE_REPO_NAME_LC: ${{ env.IMAGE_REPO_NAME_LC }}"
           
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           file: Dockerfile
           context: .
-          push: ${{ github.event_name  != 'pull_request' }}
-          tags: ${{ steps.image.outputs.IMAGE_REPO_NAME_LC }}:${{ steps.tag.outputs.TAG_NAME }}
+          push: true
+          tags: ${{ env.IMAGE_REPO_NAME_LC }}:${{ env.TAG_NAME }}
 
-  # Run the deployment actions if the build/package job completed successfully
-  deploy:
-    runs-on: ubuntu-24.04
-    needs: build_and_publish
-    steps:
       - name: Deploy to server
         uses: appleboy/ssh-action@v1
         with:
@@ -116,13 +106,10 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            echo ${{ secrets.GHCR_TOKEN }} | docker login ${{ env.REGISTRY}} -u 
-              ${{ needs.build_and_publish.outputs.REPO_USERNAME_LC }} --password-stdin
+            echo ${{ secrets.GHCR_TOKEN }} | docker login ${{ env.REGISTRY}} -u ${{ env.REPO_USERNAME_LC }} --password-stdin
               
-            docker image pull ${{ needs.build_and_publish.outputs.IMAGE_REPO_NAME_LC }}:
-              ${{ needs.build_and_publish.outputs.TAG_NAME }}
-              
+            docker image pull ${{ env.IMAGE_REPO_NAME_LC }}:${{ env.TAG_NAME }}
             docker container stop api
             docker container rm api
-            docker container run -d --name api -p 8000:8000 ${{ needs.build_and_publish.outputs.IMAGE_REPO_NAME_LC }}
+            docker container run -d --name api -p 8000:8000 ${{ env.IMAGE_REPO_NAME_LC }}
 

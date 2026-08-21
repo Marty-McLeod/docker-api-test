@@ -1,6 +1,14 @@
 name: Docker image build and deploy
-# Build & deployment workflow to build a Docker image, log into the VPS server, and
-# run a Docker container
+# Builds a Docker image from the rep and deploys it to a VPS server
+# Repo -> Docker image -> GitHub registry -> SSH to VPS server -> pull image -> run container
+#
+# This workflow file will run successfully when the follow occur:
+# - Manual run ('workflow_dispatch')
+# - A branch pull request w/ label 'deploy' is merged
+# - A merged branch w/out label 'deploy' has the label added
+#
+# NOTE: A PR request creation w/ label will trigger the 'labeled' action type but the workflow will
+# fails as 'merged' or 'closed' are not met.
 on:
   # push:
   #   branches: main
@@ -61,15 +69,15 @@ jobs:
       contents: read
       packages: write
     steps:      
-      # - name: Checkout repository (${{ github.ref_name }})
-      #   uses: actions/checkout@v6
+      - name: Checkout repository (${{ github.ref_name }})
+        uses: actions/checkout@v6
 
-      # - name: Log into package/image registry (${{ env.REGISTRY }})
-      #   uses: docker/login-action@v4
-      #   with:
-      #     registry: ${{ env.REGISTRY }}
-      #     username: ${{ github.repository_owner }}
-      #     password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log into package/image registry (${{ env.REGISTRY }})
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       # Docker-specific env variables
       # NOTE! env variables defined in a step cannot be referenced until another step, hence the 
@@ -90,26 +98,26 @@ jobs:
           echo "REPO_USERNAME_LC: ${{ env.REPO_USERNAME_LC }}"
           echo "IMAGE_REPO_NAME_LC: ${{ env.IMAGE_REPO_NAME_LC }}"
           
-      # - name: Build and push Docker image
-      #   uses: docker/build-push-action@v6
-      #   with:
-      #     file: Dockerfile
-      #     context: .
-      #     push: true
-      #     tags: ${{ env.IMAGE_REPO_NAME_LC }}:${{ env.TAG_NAME }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          file: Dockerfile
+          context: .
+          push: true
+          tags: ${{ env.IMAGE_REPO_NAME_LC }}:${{ env.TAG_NAME }}
 
-      # - name: Deploy to server
-      #   uses: appleboy/ssh-action@v1
-      #   with:
-      #     host: ${{ secrets.SSH_HOST }}
-      #     port: ${{ secrets.SSH_PORT }}
-      #     username: ${{ secrets.SSH_USER }}
-      #     password: ${{ secrets.SSH_PASSWORD }}
-      #     script: |
-      #       echo ${{ secrets.GHCR_TOKEN }} | docker login ${{ env.REGISTRY}} -u ${{ env.REPO_USERNAME_LC }} --password-stdin
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            echo ${{ secrets.GHCR_TOKEN }} | docker login ${{ env.REGISTRY}} -u ${{ env.REPO_USERNAME_LC }} --password-stdin
               
-      #       docker image pull ${{ env.IMAGE_REPO_NAME_LC }}:${{ env.TAG_NAME }}
-      #       docker container stop api
-      #       docker container rm api
-      #       docker container run -d --name api -p 8000:8000 ${{ env.IMAGE_REPO_NAME_LC }}
+            docker image pull ${{ env.IMAGE_REPO_NAME_LC }}:${{ env.TAG_NAME }}
+            docker container stop api
+            docker container rm api
+            docker container run -d --name api -p 8000:8000 ${{ env.IMAGE_REPO_NAME_LC }}
 

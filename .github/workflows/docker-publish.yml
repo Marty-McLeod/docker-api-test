@@ -2,8 +2,8 @@ name: Docker image build and deploy
 # Build & deployment workflow to build a Docker image, log into the VPS server, and
 # run a Docker container
 on:
-  push:
-    branches: main
+  # push:
+  #   branches: main
       
   pull_request:
     branches: main
